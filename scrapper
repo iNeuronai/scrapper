@@ -3,3 +3,7 @@ from flask_cors import CORS,cross_origin
 import requests
 from bs4 import BeautifulSoup as bs
 from urllib.request import urlopen as uReq
+
+
+
+https://drive.google.com/drive/folders/10KLhZpEmD4o2Mgwzgck1iizfv8lneNyZ?usp=share_link
