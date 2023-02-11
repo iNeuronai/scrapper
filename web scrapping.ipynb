@@ -1,0 +1,581 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "6fef2e32-c06d-4ebf-a186-5ae5ad3fffcd",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from flask import Flask, render_template, request,jsonify\n",
+    "from flask_cors import CORS,cross_origin\n",
+    "import requests\n",
+    "from bs4 import BeautifulSoup as bs\n",
+    "from urllib.request import urlopen as uReq"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "2f43066c-d83d-4d8e-93a0-da8194f5ec64",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting flask\n",
+      "  Downloading Flask-2.2.2-py3-none-any.whl (101 kB)\n",
+      "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m101.5/101.5 kB\u001b[0m \u001b[31m11.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[?25hRequirement already satisfied: Jinja2>=3.0 in /opt/conda/lib/python3.10/site-packages (from flask) (3.1.2)\n",
+      "Requirement already satisfied: click>=8.0 in /opt/conda/lib/python3.10/site-packages (from flask) (8.1.3)\n",
+      "Collecting itsdangerous>=2.0\n",
+      "  Downloading itsdangerous-2.1.2-py3-none-any.whl (15 kB)\n",
+      "Collecting Werkzeug>=2.2.2\n",
+      "  Downloading Werkzeug-2.2.2-py3-none-any.whl (232 kB)\n",
+      "\u001b[2K     \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m232.7/232.7 kB\u001b[0m \u001b[31m32.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[?25hRequirement already satisfied: MarkupSafe>=2.0 in /opt/conda/lib/python3.10/site-packages (from Jinja2>=3.0->flask) (2.1.1)\n",
+      "Installing collected packages: Werkzeug, itsdangerous, flask\n",
+      "Successfully installed Werkzeug-2.2.2 flask-2.2.2 itsdangerous-2.1.2\n",
+      "Note: you may need to restart the kernel to use updated packages.\n"
+     ]
+    }
+   ],
+   "source": [
+    "pip install flask"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "5b971f46-f324-4feb-8ec2-a4222bebdbe2",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting flask_cors\n",
+      "  Downloading Flask_Cors-3.0.10-py2.py3-none-any.whl (14 kB)\n",
+      "Requirement already satisfied: Six in /opt/conda/lib/python3.10/site-packages (from flask_cors) (1.16.0)\n",
+      "Requirement already satisfied: Flask>=0.9 in /opt/conda/lib/python3.10/site-packages (from flask_cors) (2.2.2)\n",
+      "Requirement already satisfied: Werkzeug>=2.2.2 in /opt/conda/lib/python3.10/site-packages (from Flask>=0.9->flask_cors) (2.2.2)\n",
+      "Requirement already satisfied: itsdangerous>=2.0 in /opt/conda/lib/python3.10/site-packages (from Flask>=0.9->flask_cors) (2.1.2)\n",
+      "Requirement already satisfied: click>=8.0 in /opt/conda/lib/python3.10/site-packages (from Flask>=0.9->flask_cors) (8.1.3)\n",
+      "Requirement already satisfied: Jinja2>=3.0 in /opt/conda/lib/python3.10/site-packages (from Flask>=0.9->flask_cors) (3.1.2)\n",
+      "Requirement already satisfied: MarkupSafe>=2.0 in /opt/conda/lib/python3.10/site-packages (from Jinja2>=3.0->Flask>=0.9->flask_cors) (2.1.1)\n",
+      "Installing collected packages: flask_cors\n",
+      "Successfully installed flask_cors-3.0.10\n",
+      "Note: you may need to restart the kernel to use updated packages.\n"
+     ]
+    }
+   ],
+   "source": [
+    "pip install flask_cors"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "id": "48fa5a69-140a-41c3-84a8-36c4c99e3ed2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "searchstring = \"iphone11\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "id": "35f254be-d862-4372-bca1-bb21b54e3cc9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "flipcart_url = \"https://www.flipkart.com/search?q=\" + searchstring "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "id": "bbe0c47c-ddcf-42ea-9d42-607775b14e3e",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'https://www.flipkart.com/search?q=iphone11'"
+      ]
+     },
+     "execution_count": 51,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "flipcart_url"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "id": "c8644e77-e407-418b-8b85-0732f9dfbc44",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "uclient = uReq(flipcart_url)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 53,
+   "id": "90b76d0f-45f8-4dcc-815c-6b3406caf023",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<http.client.HTTPResponse at 0x7f7e314d0220>"
+      ]
+     },
+     "execution_count": 53,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "uclient"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 54,
+   "id": "58a5b079-fa50-46dd-821c-231f30db784d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "flipkartpage = uclient.read()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9879ff7c-43b9-4630-a41c-be3eda4c1c49",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 56,
+   "id": "ee41ca60-caa5-4683-b727-d25fc42db35c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "flipkart_html = bs(flipkartpage ,\"html.parser\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6636247f-ff40-4173-bb4b-414c66f4a2f3",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 59,
+   "id": "0ef7181f-4a4b-4968-b94a-cab2d1dd67a4",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'https://www.flipkart.com/apple-iphone-11-white-128-gb/p/itme32df47ea6742?pid=MOBFWQ6B7KKRXDDS&lid=LSTMOBFWQ6B7KKRXDDSULUZ0N&marketplace=FLIPKART&q=iphone11&store=tyy%2F4io&srno=s_1_1&otracker=search&iid=1a7d6e12-960f-485c-8380-2cb8dc49a077.MOBFWQ6B7KKRXDDS.SEARCH&ssid=vuttur3d740000001676109727214&qH=d6db477051465f9a'"
+      ]
+     },
+     "execution_count": 59,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "'https://www.flipkart.com/apple-iphone-11-white-128-gb/p/itme32df47ea6742?pid=MOBFWQ6B7KKRXDDS&lid=LSTMOBFWQ6B7KKRXDDSULUZ0N&marketplace=FLIPKART&q=iphone11&store=tyy%2F4io&srno=s_1_1&otracker=search&iid=1a7d6e12-960f-485c-8380-2cb8dc49a077.MOBFWQ6B7KKRXDDS.SEARCH&ssid=vuttur3d740000001676109727214&qH=d6db477051465f9a'"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 71,
+   "id": "5988db2e-f806-413e-80ac-0997a2141067",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "bigboxes = flipkart_html.findAll(\"div\" , {\"class\": \"_1AtVbE col-12-12\"})"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 72,
+   "id": "bbd7af0e-1c00-4ab4-8c78-afeca2356518",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "30"
+      ]
+     },
+     "execution_count": 72,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "len(bigboxes)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 81,
+   "id": "f7783225-a0d0-47fd-bd22-f9121511d0e5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "box = bigboxes[2]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 85,
+   "id": "82903d84-4863-4e20-b7ba-abeae16ebbd7",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'https://www.flipkart.com/apple-iphone-11-white-128-gb/p/itme32df47ea6742?pid=MOBFWQ6B7KKRXDDS&amp;lid=LSTMOBFWQ6B7KKRXDDSULUZ0N&amp;marketplace=FLIPKART&amp;q=iphone11&amp;store=tyy%2F4io&amp;srno=s_1_1&amp;otracker=search&amp;fm=organic&amp;iid=cbad50bb-39eb-4c43-8f00-5dd17e4f58ea.MOBFWQ6B7KKRXDDS.SEARCH&amp;ppt=None&amp;ppn=None&amp;ssid=arzbus405c0000001676110285064&amp;qH=d6db477051465f9a'"
+      ]
+     },
+     "execution_count": 85,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "\"https://www.flipkart.com/apple-iphone-11-white-128-gb/p/itme32df47ea6742?pid=MOBFWQ6B7KKRXDDS&amp;lid=LSTMOBFWQ6B7KKRXDDSULUZ0N&amp;marketplace=FLIPKART&amp;q=iphone11&amp;store=tyy%2F4io&amp;srno=s_1_1&amp;otracker=search&amp;fm=organic&amp;iid=cbad50bb-39eb-4c43-8f00-5dd17e4f58ea.MOBFWQ6B7KKRXDDS.SEARCH&amp;ppt=None&amp;ppn=None&amp;ssid=arzbus405c0000001676110285064&amp;qH=d6db477051465f9a\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 89,
+   "id": "3bd49514-0a98-459b-bbe5-733d7a07a16b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "productlink = \"https://www.flipkart.com\"+box.div.div.div.a['href']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 90,
+   "id": "753632a8-5ab1-41e5-8040-463754bfc6d2",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'https://www.flipkart.com/apple-iphone-11-white-128-gb/p/itme32df47ea6742?pid=MOBFWQ6B7KKRXDDS&lid=LSTMOBFWQ6B7KKRXDDSULUZ0N&marketplace=FLIPKART&q=iphone11&store=tyy%2F4io&srno=s_1_1&otracker=search&fm=organic&iid=cbad50bb-39eb-4c43-8f00-5dd17e4f58ea.MOBFWQ6B7KKRXDDS.SEARCH&ppt=None&ppn=None&ssid=arzbus405c0000001676110285064&qH=d6db477051465f9a'"
+      ]
+     },
+     "execution_count": 90,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "productlink"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 91,
+   "id": "c9f4dce9-e6dd-4729-9fac-7be635f34df6",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "productreq = requests.get(productlink)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 92,
+   "id": "fa7b061b-258d-40a0-be5f-413b8681328e",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<Response [200]>"
+      ]
+     },
+     "execution_count": 92,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "productreq"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 95,
+   "id": "24ca4f6e-5603-4c74-842c-d7caa52318c8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "prod_html = bs(productreq.text,\"html.parser\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 97,
+   "id": "5eeed3b5-db23-420d-9169-91c136ebb5a5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "commnet_box = prod_html.find_all(\"div\", {\"class\" : \"_16PBlm\"})"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 98,
+   "id": "73f7f7aa-ee92-48bb-8307-abd654b54858",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "11"
+      ]
+     },
+     "execution_count": 98,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "len(commnet_box)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 103,
+   "id": "f284e6b6-8fc2-462b-a68f-f1554b73f0fb",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "5\n",
+      "4\n",
+      "5\n",
+      "5\n",
+      "5\n",
+      "5\n",
+      "5\n",
+      "5\n",
+      "5\n",
+      "4\n"
+     ]
+    },
+    {
+     "ename": "AttributeError",
+     "evalue": "'NoneType' object has no attribute 'div'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "Cell \u001b[0;32mIn [103], line 2\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[38;5;28;01mfor\u001b[39;00m i \u001b[38;5;129;01min\u001b[39;00m commnet_box :\n\u001b[0;32m----> 2\u001b[0m     \u001b[38;5;28mprint\u001b[39m(\u001b[43mi\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mdiv\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mdiv\u001b[49m\u001b[38;5;241m.\u001b[39mdiv\u001b[38;5;241m.\u001b[39mdiv\u001b[38;5;241m.\u001b[39mtext)\n",
+      "\u001b[0;31mAttributeError\u001b[0m: 'NoneType' object has no attribute 'div'"
+     ]
+    }
+   ],
+   "source": [
+    "for i in commnet_box :\n",
+    "    print(i.div.div.div.div.text)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 110,
+   "id": "848697b7-db71-4b7e-bff8-45b1a1311065",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "\"I'm Really happy with the productDelivery was fast as well..it was a gift for my sister and she loved it so much.\""
+      ]
+     },
+     "execution_count": 110,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "commnet_box[1].div.div.find_all(\"div\" ,{\"class\" : \"\"})"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 117,
+   "id": "d9ae2a44-b4f7-450b-93d6-ba98073fcbdd",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Really satisfied with the Product I received... It’s totally genuine and the packaging was also really good so if ur planning to buy just go for it.\n",
+      "\n",
+      "\n",
+      "I'm Really happy with the productDelivery was fast as well..it was a gift for my sister and she loved it so much.\n",
+      "\n",
+      "\n",
+      "Amazing phone with great cameras and better battery which gives you the best performance. I just love the camera .\n",
+      "\n",
+      "\n",
+      "Great iPhone very snappy experience as apple kind. Upgraded from iPhone 7. Pros-Camera top class - Battery top performed -Chipset no need to say as apple kind -Security as you expect from apple - Display super bright industry leading colour   accuracy and super responsive -Build quality as expect from apple sturdy  premium durable beautiful stylish. -Os most stable os in smartphone industry Cons -No 5G-Display is not based on OLED technology -Charger headphones and 1 apple stic...\n",
+      "\n",
+      "\n",
+      "It's my first time to use iOS phone and I am loving my upgradation 😍😍 I love the color, I love the assebility of the phone....I need to learn more about its functionality, but as far as I have seen, it's quite easy and it has a lot of functions to work on, specially if you are a content writer or a blogger you get a lot of content creation platforms and they are really amazing. This phone not only for good quality photography but a lot of other task too.😍💯\n",
+      "\n",
+      "\n",
+      "Previously I was using one plus 3t it was a great phone And then I decided to upgrade I am stuck between Samsung s10 plus or iPhone 11 I have seen the specs and everything were good except the display it’s somewhere between 720-1080 and it’s not even an amoled it’s an LCD display But I decided to go with iPhone because I have never used an IOS device I have Been an android user from the past 9 years I ordered IPhone 11 (128gb) product redMy experience after using 3 weeks 1. The delivery ...\n",
+      "\n",
+      "\n",
+      "Value for money5 star rating Excellent cameraBattery backup full day in single charge.Tougher and water resistant design, glossy back.The screen has excellent brightness and contrast.Apple A13 Bionic is the fastest smartphone chip on the planet.Excellent battery life, fast charging support.Stereo speakers with great quality.\n",
+      "\n",
+      "\n",
+      "What a camera .....just awesome ..you can feel this iPhone just awesome . Good for gaming also ...try pubg in hd it’s just wow\n",
+      "\n",
+      "\n",
+      "Amazing Powerful and Durable Gadget.I’m am very happy with the camera picture quality, Amazing face id unlocked in dark room, Strong battery with perfect screen size as you can carry easily in pocket. This is my third iPhone. I shifted from android Samsung Note series to iPhone because of the strong build quality and peace of mind for next 3-4 years.Don’t think to much just go for it and I suggest you to go for minimum 128gb variant or more 256gb. I’ve attached my puppy pics and no fi...\n",
+      "\n",
+      "\n",
+      "I was using Iphone 6s and also Oneplus 6t. Both mobiles were perfectly alright in Photos, gaming, and smooth interface . My 6s mobile getting battery issue. thought upgrade to 11. Really like this mobile of its Internal storage (compare to 6s) , camera and its touch feeling. Its a worth buying mobile for me.\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "ename": "AttributeError",
+     "evalue": "'NoneType' object has no attribute 'div'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "Cell \u001b[0;32mIn [117], line 2\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[38;5;28;01mfor\u001b[39;00m i \u001b[38;5;129;01min\u001b[39;00m commnet_box : \n\u001b[0;32m----> 2\u001b[0m     \u001b[38;5;28mprint\u001b[39m(\u001b[43mi\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mdiv\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mdiv\u001b[49m\u001b[38;5;241m.\u001b[39mfind_all(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mdiv\u001b[39m\u001b[38;5;124m\"\u001b[39m ,{\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mclass\u001b[39m\u001b[38;5;124m\"\u001b[39m : \u001b[38;5;124m\"\u001b[39m\u001b[38;5;124m\"\u001b[39m})[\u001b[38;5;241m0\u001b[39m]\u001b[38;5;241m.\u001b[39mdiv\u001b[38;5;241m.\u001b[39mtext)\n\u001b[1;32m      3\u001b[0m     \u001b[38;5;28mprint\u001b[39m(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;130;01m\\n\u001b[39;00m\u001b[38;5;124m\"\u001b[39m)\n",
+      "\u001b[0;31mAttributeError\u001b[0m: 'NoneType' object has no attribute 'div'"
+     ]
+    }
+   ],
+   "source": [
+    "for i in commnet_box : \n",
+    "    print(i.div.div.find_all(\"div\" ,{\"class\" : \"\"})[0].div.text)\n",
+    "    print(\"\\n\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 126,
+   "id": "33896c98-1ab9-4a33-aeb9-fa7c8450df7f",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'George Haokip'"
+      ]
+     },
+     "execution_count": 126,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "commnet_box[1].div.div.find_all(\"p\" , {\"class\" :\"_2sc7ZR _2V5EHH\" })[0].text"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 128,
+   "id": "e6e1cb08-38de-4a32-819f-058ac1999d57",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Flipkart Customer\n",
+      "George Haokip\n",
+      "Flipkart Customer\n",
+      "Manish Raghuvanshi\n",
+      "Jimly  Gogoi\n",
+      "Vamshi  Chakrala \n",
+      "Chirag Rajput\n",
+      "Vishal Dubey\n",
+      "Rahul Verma\n",
+      "vijay hegde\n"
+     ]
+    },
+    {
+     "ename": "AttributeError",
+     "evalue": "'NoneType' object has no attribute 'div'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "Cell \u001b[0;32mIn [128], line 2\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[38;5;28;01mfor\u001b[39;00m i \u001b[38;5;129;01min\u001b[39;00m commnet_box:\n\u001b[0;32m----> 2\u001b[0m     \u001b[38;5;28mprint\u001b[39m(\u001b[43mi\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mdiv\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mdiv\u001b[49m\u001b[38;5;241m.\u001b[39mfind_all(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mp\u001b[39m\u001b[38;5;124m\"\u001b[39m , {\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mclass\u001b[39m\u001b[38;5;124m\"\u001b[39m :\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124m_2sc7ZR _2V5EHH\u001b[39m\u001b[38;5;124m\"\u001b[39m })[\u001b[38;5;241m0\u001b[39m]\u001b[38;5;241m.\u001b[39mtext)\n",
+      "\u001b[0;31mAttributeError\u001b[0m: 'NoneType' object has no attribute 'div'"
+     ]
+    }
+   ],
+   "source": [
+    "for i in commnet_box:\n",
+    "    print(i.div.div.find_all(\"p\" , {\"class\" :\"_2sc7ZR _2V5EHH\" })[0].text)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "583433e7-41fc-42a6-9918-c335f068f9c6",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
